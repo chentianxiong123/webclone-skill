@@ -1,0 +1,1 @@
+﻿interface:`n  display_name: "WebClone"`n  short_description: "Clone any website into a pixel-perfect Vue 3 + Vite project"`n  default_prompt: "Use $webclone-skill to clone a website URL into a Vue 3 project."

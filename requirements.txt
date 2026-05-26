@@ -1,0 +1,1 @@
+﻿playwright>=1.40.0`nPillow>=10.0.0`nnumpy>=1.24.0
