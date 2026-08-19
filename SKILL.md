@@ -1,6 +1,6 @@
 ---
 name: clone-website
-description: Reverse-engineer and clone websites with an automated data-extraction pipeline and AI agent code generation. Uses web-clone engine for snapshot + deep JS extraction scripts + JCodesMore-style spec-driven agent dispatch. Produces pixel-perfect HTML/CSS/JS clones or Next.js components.
+description: Reverse-engineer and clone websites with an automated data-extraction pipeline and AI agent code generation. Uses web-clone engine to snapshot + proxy the target page first, then all extraction runs against the local snapshot — bypassing login walls and anti-scraping. Produces pixel-perfect HTML/CSS/JS clones or Next.js components.
 argument-hint: "<url1> [<url2> ...]"
 user-invocable: true
 ---
@@ -9,49 +9,46 @@ user-invocable: true
 
 You are about to reverse-engineer and clone **$ARGUMENTS** as pixel-perfect, functional replicas.
 
-This skill combines two capabilities:
-1. **Automated data extraction** — web-clone engine + 17 deep Playwright scripts that capture DOM tree, computed styles, CSSOM, interactions, and behavior states as structured JSON
-2. **Spec-driven AI agent code generation** — following JCodesMore's methodology: extract everything first, write auditable spec files, then dispatch builder agents with exact values
+**Core strategy: snapshot first, then extract locally.** web-clone downloads the page + all assets + API proxy as a fully offline static snapshot. Every extraction script runs against `http://localhost:8080/` — the local snapshot — never the live URL. This bypasses login walls, anti-scraping, and rate limits entirely.
+
+---
 
 ## Guiding Principles
 
-These truths separate a successful clone from a "close enough" mess:
-
 ### 1. Data Before Code
-Never guess a CSS value, spacing, or color. The extraction scripts produce exact `getComputedStyle()` values. If the data says `padding: 16px 20px 0px 24px`, that's what goes in the code. Fabricated values fail pixel-diff.
+Never guess a CSS value, spacing, or color. Extraction scripts produce exact `getComputedStyle()` values. Fabricated values fail pixel-diff.
 
-### 2. Spec Files Are the Contract
-Every component gets a `.spec.md` file BEFORE any builder is dispatched. The spec contains DOM structure, exact computed styles, all interaction states, and real text content. If a builder has to guess anything, extraction was incomplete.
+### 2. Snapshot Is the Source of Truth
+The local snapshot (`http://localhost:8080/`) is the reference for ALL subsequent steps. All extraction, screenshot, verification commands use the snapshot URL — never the live URL.
 
-### 3. Small Tasks, Perfect Results
-A section with 3+ distinct sub-components gets broken into separate builders. Rule of thumb: if the builder prompt exceeds ~150 lines of spec content, split it.
+### 3. Spec Files Are the Contract
+Every component gets a `.spec.md` file BEFORE any builder is dispatched. If a builder has to guess anything, extraction was incomplete.
 
 ### 4. Extract Behavior, Not Just Appearance
-A website is a living thing. Elements move, change, appear, and disappear on scroll, hover, click, and time. Capture both the visual state AND the transition (duration, easing, trigger).
+Capture both the visual state AND the transition (duration, easing, trigger).
 
 ### 5. Build Must Always Compile
-Every generated file passes `npm run build` before completion. A broken build is never acceptable.
+Every generated file passes `npm run build` before completion.
 
 ---
 
 ## Phase 0 — Preflight
 
-Run all checks. If any fails, **STOP** and report.
-
 ```bash
 node --version          # >= 20.0.0
 pnpm --version
+cd /tmp/webclone-skill
 pnpm install
 pnpm build
 ```
 
-**PREFLIGHT GATE:** All checks pass before proceeding.
+**PREFLIGHT GATE:** All checks pass.
 
 ---
 
-## Phase 1 — Snapshot (Automated Data Collection)
+## Phase 1 — Snapshot & Serve (下载 + 启动本地服务器)
 
-Use the web-clone engine to download the page and all resources:
+**Step 1a: Download the page as a static snapshot.**
 
 ```bash
 cd /tmp/webclone-skill
@@ -60,64 +57,100 @@ pnpm dev:cli <URL> \
   -o ./snapshot \
   --adapter playwright \
   --executable-path /usr/bin/google-chrome \
-  --extract-components \
+  --scan-depth 2 \
   --max-assets 200 \
   --concurrency 6
 ```
 
-Run deep extraction scripts on the live page:
+This downloads the HTML, all CSS/JS/images/assets, and preserves the full page structure. The API proxy records any dynamic endpoints used.
+
+**Step 1b: Start the snapshot server (serves locally on port 8080).**
 
 ```bash
-# DOM tree + bounding rects + computed styles
-node scripts/js/extract-structure-v2.js <URL>
-
-# Full CSSOM walk (all 13k+ CSS rules)
-node scripts/js/extract-cssom.js <URL>
-
-# Interactive elements inventory
-node scripts/js/extract-states-inventory.js <URL>
-
-# Hover/focus/active state CSS diffs
-node scripts/js/extract-states-capture.js <URL>
-
-# Page screenshot
-node scripts/js/extract-page-screenshot.js <URL>
+cd /tmp/webclone-skill/snapshot
+PORT=8080 node server.js &
 ```
 
-**SNAPSHOT GATE:** Assets downloaded > 0, DOM tree captured, CSSOM complete, interactive elements found.
+Verify: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/` → returns 200.
+
+**Step 1c: Run ALL extraction scripts against the local snapshot.**
+
+```bash
+# Set local URL once
+LOCAL_URL=http://localhost:8080/
+
+# DOM tree + bounding rects + computed styles
+node scripts/js/extract-structure-v2.js $LOCAL_URL
+
+# Full CSSOM walk (all CSS rules)
+node scripts/js/extract-cssom.js $LOCAL_URL
+
+# Interactive elements inventory
+node scripts/js/extract-states-inventory.js $LOCAL_URL
+
+# Hover/focus/active state CSS diffs
+node scripts/js/extract-states-capture.js $LOCAL_URL
+
+# Full-page screenshot at 3 viewports
+node scripts/js/extract-page-screenshot.js $LOCAL_URL
+
+# Links extraction
+node scripts/js/extract-links.js $LOCAL_URL
+
+# Shadow DOM extraction
+node scripts/js/extract-shadow.js $LOCAL_URL
+
+# Component screenshots
+node scripts/js/extract-component-screenshot.js $LOCAL_URL
+
+# Visual extraction
+node scripts/js/extract-visual-v2.js $LOCAL_URL
+
+# Lazy load detection
+node scripts/js/extract-lazy-load.js $LOCAL_URL
+
+# DOM mapping
+node scripts/js/map-dom.js $LOCAL_URL
+
+# Validate all extraction results
+node scripts/js/validate-extraction.js $LOCAL_URL
+```
+
+All scripts output structured JSON files. These are the raw data for Phase 2-3.
+
+**SNAPSHOT GATE:**
+- Port 8080 returns 200
+- `extract-structure-v2.js` produces DOM tree with bounding rects
+- `extract-cssom.js` produces CSS rules (>100)
+- `extract-states-inventory.js` produces interactive elements (>0)
 
 ---
 
 ## Phase 2 — Inspection & Topology
 
-Analyze extracted data to map the page:
-
-```bash
-# Page structure overview
-pnpm dev:cli inspect <URL> --outline
-
-# Find specific elements
-pnpm dev:cli inspect <URL> --locate "Search"
-```
+Analyze the extracted JSON files to map the page structure. Read the DOM tree, CSS rules, and interaction records.
 
 **Write two spec files** in `<app-root>/docs/research/<site-key>/<page-key>/`:
 
 ### `PAGE_TOPOLOGY.md`
-Map every distinct section: visual order, fixed/sticky overlays, column structure, z-index layers, interaction model (static/click/scroll/time-driven).
+Map every distinct section from the DOM tree:
+- Visual order (by y-coordinate from bounding rects)
+- Fixed/sticky overlays vs flow content
+- Column structure and z-index layers
+- Interaction model per section (static/click/scroll/time-driven)
 
 ### `BEHAVIORS.md`
-Record every observed behavior:
-- Scroll-triggered header changes (trigger position, before/after styles, transition)
-- Click-driven tabs/pills (state per tab, content changes)
-- Hover states (property changes, transition timing)
-- Responsive breakpoints (1440px → 768px → 390px layout changes)
-- Scroll-driven animations (IntersectionObserver thresholds, keyframes)
+Record every behavior from `extract-states-capture.js` output:
+- Scroll-triggered changes (before/after CSS values, trigger position)
+- Click-driven tabs/pills (state per click, content changes)
+- Hover states (CSS property changes, transition timing)
+- Responsive breakpoints (from `extract-visual-v2.js`)
 
 ---
 
 ## Phase 3 — Component Spec Files
 
-For each section in PAGE_TOPOLOGY, write a component spec file:
+For each section in PAGE_TOPOLOGY, write a component spec:
 
 **Path:** `docs/research/<site-key>/<page-key>/components/<ComponentName>.spec.md`
 
@@ -127,48 +160,36 @@ For each section in PAGE_TOPOLOGY, write a component spec file:
 # <ComponentName> Specification
 
 ## Overview
-- **Target file:** `src/components/sites/<site-key>/<page-key>/<ComponentName>.tsx`
+- **Target file:** `<output>/<ComponentName>.tsx` or `<output>/components/<ComponentName>.vue`
 - **Screenshot:** `docs/design-references/<site-key>/<page-key>/<name>.png`
 - **Interaction model:** <static | click-driven | scroll-driven | time-driven>
 
 ## DOM Structure
-<Describe the element hierarchy>
+<From extract-structure-v2.js output — exact tag/class hierarchy>
 
-## Computed Styles (exact values from getComputedStyle)
+## Computed Styles (exact values from extract-cssom.js)
 
 ### Container
 - display: ...
 - padding: ...
 - background: ...
-- (every relevant property)
 
 ### <Child>
 - fontSize: ...
 - color: ...
-- ...
 
 ## States & Behaviors
-
-### <Behavior name>
-- **Trigger:** <scroll position 50px | click .tab | hover>
-- **State A (before):** property: value → **State B (after):** property: value
-- **Transition:** transition: all 0.3s ease
-- **Implementation:** <CSS transition + listener | IntersectionObserver>
-
-### Hover states
-- <Element>: <property>: <before> → <after>, transition: <value>
+<From extract-states-capture.js output — exact before/after CSS diffs>
 
 ## Assets
-- Image: public/sites/<site-key>/<page-key>/images/<file>.webp
-- Icons: <IconComponent> from shared icons module
+- Image: <from snapshot, use local path>
+- Icons: <from DOM tree>
 
 ## Text Content (verbatim)
-<All text from live site>
+<From DOM tree — exact textContent>
 
 ## Responsive
-- **Desktop (1440px):** <layout>
-- **Tablet (768px):** <what changes>
-- **Mobile (390px):** <what changes>
+<From extract-visual-v2.js — layout changes per viewport>
 ```
 
 ---
@@ -177,26 +198,26 @@ For each section in PAGE_TOPOLOGY, write a component spec file:
 
 Choose your output target:
 
-### Option A: Standalone HTML/CSS/JS (fastest, zero dependencies)
+### Option A: Standalone HTML/CSS/JS (fastest)
 ```bash
-node scripts/js/generate-source.mjs <URL> -o ./output
+node scripts/js/generate-source.mjs -o ./output
 ```
-Produces a single `index.html` + `server.js` that works standalone.
+Reads all Phase 1 extraction JSON files and generates a single `index.html` + `server.js`.
 
 ### Option B: Vue 3 + TypeScript Project
 ```bash
-pnpm dev:cli <URL> \
+pnpm dev:cli ./snapshot \
   -o ./output \
-  --extract-components \
+  --convert-local \
   --codegen-framework vue \
   --codegen-typescript \
   --codegen-generate-drafts
 ```
 
 ### Option C: Next.js (JCodesMore pattern)
-Write TypeScript components per spec files using the `templates/nextjs-clone/` scaffold. Dispatch builder agents per component.
+Write TypeScript components per spec files using `templates/nextjs-clone/`.
 
-**CODEGEN GATE:** Build passes. All CSS values match extraction JSON. Images use real URLs.
+**CODEGEN GATE:** Build passes. All CSS values match extraction JSON.
 
 ---
 
@@ -204,19 +225,18 @@ Write TypeScript components per spec files using the `templates/nextjs-clone/` s
 
 ### 5a. Serve both pages
 ```bash
-# Serve original
-cd ./snapshot && node server.js &          # port 8080
+# Original (already running from Phase 1)
+# http://localhost:8080/
 
-# Serve clone
-cd ./output && npm run dev                  # or npx vite
+# Clone
+cd ./output && npx vite --port 3001
 ```
 
 ### 5b. Pixel diff
 ```bash
-python scripts/python/pixel-diff.py \
-  --original original.png \
-  --clone clone.png \
-  --heatmap diff.png
+# Screenshot snapshot at 1440px
+# Screenshot clone at 1440px
+python scripts/python/pixel-diff.py original.png clone.png --heatmap diff.png
 ```
 
 ### 5c. Acceptance thresholds
@@ -224,13 +244,7 @@ python scripts/python/pixel-diff.py \
 | Metric | Pass | Warn | Fail |
 |--------|------|------|------|
 | Pixel diff % | <10% | 10-25% | >25% |
-| Interactive element diff | <=2 | 3-5 | >5 |
 | CSS value accuracy | 100% | 90-99% | <90% |
-
-### 5d. Interaction test
-```bash
-python scripts/python/test-interactions.py --url http://localhost:3001
-```
 
 ---
 
@@ -238,9 +252,9 @@ python scripts/python/test-interactions.py --url http://localhost:3001
 
 | Error | Action |
 |-------|--------|
-| Navigation timeout | Retry with `--timeout 30000` |
-| Anti-scraping | Use `--adapter playwright --headed` |
-| Component extraction empty | Increase `--component-depth 8` or `--memory-limit 4096` |
+| Snapshot fails | Increase `--scan-depth 3` or `--max-assets 500` |
+| Port 8080 in use | Use `PORT=8081 node server.js` |
+| Extraction empty | Check server.js is running, re-run extraction |
 | Codegen build fails | Fix TypeScript errors |
 | Phase fails 3x | **STOP** and ask user |
 
@@ -250,30 +264,28 @@ python scripts/python/test-interactions.py --url http://localhost:3001
 
 ```
 User: "Clone https://fanyi.baidu.com"
-Agent: Phase 0 → 1 → 2 → 3 → 4 → 5, sequentially with GATE checks.
+
+Phase 0: pnpm build
+Phase 1: pnpm dev:cli <URL> -o ./snapshot --serve &
+         node scripts/js/*.js http://localhost:8080/    (13 scripts)
+Phase 2: Write PAGE_TOPOLOGY.md + BEHAVIORS.md
+Phase 3: Write <Component>.spec.md per section
+Phase 4: node scripts/js/generate-source.mjs -o ./output
+Phase 5: python scripts/python/pixel-diff.py orig.png clone.png
 ```
-
-### Scripts Reference
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm dev:cli <URL> -o out --adapter playwright` | Snapshot + resource download |
-| `scripts/js/extract-structure-v2.js <URL>` | DOM tree + bounding rects |
-| `scripts/js/extract-cssom.js <URL>` | Full CSSOM walk |
-| `scripts/js/extract-states-capture.js <URL>` | Hover/focus/active state diffs |
-| `scripts/js/generate-source.mjs <URL> -o out` | Standalone HTML/CSS/JS generation |
-| `scripts/python/pixel-diff.py orig clone` | Visual diff comparison |
 
 ---
 
-## What NOT to Do
+## Scripts Reference
 
-- Don't guess CSS values — extract them
-- Don't dispatch a builder without a spec file
-- Don't give one builder more than 150 lines of spec
-- Don't extract only default state — capture all states
-- Don't skip asset extraction — without real images, clones look fake
-- Don't declare complete before pixel-diff passes
+| Script | Purpose | Input |
+|--------|---------|-------|
+| `pnpm dev:cli <URL> -o out --adapter playwright --serve` | Snapshot + download + start server | Live URL |
+| `scripts/js/extract-structure-v2.js` | DOM tree + bounding rects | Local URL |
+| `scripts/js/extract-cssom.js` | Full CSSOM walk | Local URL |
+| `scripts/js/extract-states-capture.js` | Hover/focus/active state diffs | Local URL |
+| `scripts/js/generate-source.mjs` | Standalone HTML/CSS/JS generation | Extraction JSON |
+| `scripts/python/pixel-diff.py` | Visual diff comparison | 2 PNG files |
 
 ---
 
@@ -283,12 +295,11 @@ Agent: Phase 0 → 1 → 2 → 3 → 4 → 5, sequentially with GATE checks.
 ## Clone Complete
 
 - Source: <URL>
-- Output: <path>
+- Snapshot: ./snapshot/ (http://localhost:8080/)
+- Extraction data: 13 JSON files
+- Output: ./output/
 - Sections built: <N>
-- Components created: <N>
 - Spec files written: <N>
-- Assets downloaded: <N>
 - Pixel diff: <N>%
 - Build status: PASS/FAIL
-- Known gaps: <list>
 ```
