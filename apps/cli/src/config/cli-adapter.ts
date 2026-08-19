@@ -69,6 +69,8 @@ export interface CommanderOpts {
   locale?: string;
   /** Extra Chromium launch arguments (comma-separated) */
   launchArgs?: string;
+  /** Path to Chromium/Chrome executable (use system browser) */
+  executablePath?: string;
   /** Path to an explicit config file */
   configFile?: string;
   /** Start a local HTTP server after snapshot */

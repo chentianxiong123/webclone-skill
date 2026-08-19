@@ -61,6 +61,11 @@ export interface BrowserAdapterOptions {
    * @example ['--disable-gpu', '--disable-software-rasterizer']
    */
   launchArgs?: string[];
+  /**
+   * Path to the Chromium executable.
+   * Use system-installed Chrome/Chromium instead of bundled Playwright Chromium.
+   */
+  executablePath?: string;
 }
 
 /**

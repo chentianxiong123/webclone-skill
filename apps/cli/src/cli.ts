@@ -62,6 +62,7 @@ program
   .option('--viewport <size>', 'Browser viewport size, e.g. "1920x1080" (default: 1280x720)')
   .option('--locale <locale>', 'Browser locale, e.g. "zh-CN" (affects Accept-Language header)')
   .option('--launch-args <args>', 'Extra Chromium launch arguments (comma-separated)')
+  .option('--executable-path <path>', 'Path to Chromium/Chrome executable (use system browser)')
   .option('--convert-local <path>', 'Run component extraction + codegen on an existing local bundle/single output directory (skips URL fetch)')
   .option('--serve', 'Generate server files for self-contained snapshot serving (use --run to start the server)')
   .option('--serve-port <port>', 'Port for the HTTP server (default: 8080)', '8080')
@@ -134,6 +135,7 @@ program
           viewport: opts.viewport ? parseViewport(opts.viewport) : undefined,
           locale: opts.locale,
           launchArgs: opts.launchArgs ? opts.launchArgs.split(',') : undefined,
+          executablePath: opts.executablePath,
         });
 
         try {

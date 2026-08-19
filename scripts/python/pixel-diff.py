@@ -148,7 +148,7 @@ def main():
     parser = argparse.ArgumentParser(description='Pixel diff comparison')
     parser.add_argument('original', help='Original screenshot or directory')
     parser.add_argument('clone', help='Clone screenshot or directory')
-    parser.add_argument('--heatmap', '-h', help='Output heatmap file (for single file comparison)')
+    parser.add_argument('--heatmap', '-H', help='Output heatmap file (for single file comparison)')
     parser.add_argument('--components', help='Component manifest JSON (for directory comparison)')
     args = parser.parse_args()
 

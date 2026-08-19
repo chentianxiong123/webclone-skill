@@ -177,4 +177,14 @@ export interface PlaywrightAdapterOptions {
    * @example ['--disable-gpu', '--disable-software-rasterizer']
    */
   launchArgs?: string[];
+
+  /**
+   * Path to the Chromium executable.
+   *
+   * By default, Playwright uses its own bundled Chromium.
+   * Set this to use a system-installed Chrome/Chromium instead.
+   *
+   * @example '/usr/bin/google-chrome'
+   */
+  executablePath?: string;
 }

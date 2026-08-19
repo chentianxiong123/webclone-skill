@@ -416,6 +416,7 @@ export async function createPlaywrightAdapter(
   const headless = options.headless !== false;
 
   const browser = await chromium.launch({
+    ...(options.executablePath ? { executablePath: options.executablePath } : {}),
     headless,
     timeout: options.timeout ?? 30000,
     args: browserArgs,
