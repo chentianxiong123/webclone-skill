@@ -1,1 +1,6 @@
-﻿interface:`n  display_name: "WebClone"`n  short_description: "Clone any website into a pixel-perfect Vue 3 + Vite project"`n  default_prompt: "Use $webclone-skill to clone a website URL into a Vue 3 project."
+name: web-clone-skill
+description: >
+  Clone a live website into a pixel-perfect framework project.
+  Trigger when user wants to replicate, clone, or dupe a website URL.
+  Uses @web-clone/core engine (TypeScript) for snapshot, component extraction, and code generation.
+  Extends with deep DOM extraction (12 JS scripts), pixel-diff verification, and interaction state capture.

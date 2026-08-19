@@ -1,67 +1,53 @@
-// extract-component-screenshot.js — Crop a component from the full-page screenshot
-// Input: COMPONENT_SELECTOR (CSS selector), COMPONENT_LABEL (string), OUTPUT_PATH (string)
-// The Python orchestrator already has the full-page screenshot at OUTPUT_PATH.
-// This script reads the screenshot file and crops to the component's bounding rect.
-// NOTE: No IIFE wrapper. Run as: extractComponentScreenshot(selector, label, outputPath)
+#!/usr/bin/env node
+/**
+ * extract-component-screenshot.js — Component crop coordinates
+ *
+ * Identifies component boundaries and exports screenshot crop coordinates
+ * for each component.
+ *
+ * Usage: node scripts/js/extract-component-screenshot.js <URL> [-o json]
+ */
 
-function extractComponentScreenshot(selector, label, outputPath) {
-  var el = document.querySelector(selector);
-  if (!el) return { error: 'Element not found', selector: selector };
+import { chromium } from 'playwright';
+import fs from 'node:fs';
 
-  var rects = el.getClientRects();
-  if (!rects || rects.length === 0) return { error: 'No client rects', selector: selector };
+const url = process.argv[2];
+const outputFile = process.argv.find((a) => a.startsWith('-o='))?.split('=')[1] || 'component-crops.json';
 
-  // Use the bounding rect (union of all client rects)
-  var bb = rects[0];
-  var minX = bb.left, minY = bb.top, maxX = bb.right, maxY = bb.bottom;
-  for (var i = 1; i < rects.length; i++) {
-    minX = Math.min(minX, rects[i].left);
-    minY = Math.min(minY, rects[i].top);
-    maxX = Math.max(maxX, rects[i].right);
-    maxY = Math.max(maxY, rects[i].bottom);
+if (!url) {
+  console.error('Usage: node extract-component-screenshot.js <URL> [-o path.json]');
+  process.exit(1);
+}
+
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+const crops = await page.evaluate(() => {
+  const candidates = document.querySelectorAll('header, nav, main, footer, aside, section, article, div[class*="card"], div[class*="component"], div[class*="widget"], div[class*="modal"], dialog, aside');
+  const results = [];
+
+  for (const el of candidates) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 20 || rect.height < 20) continue;
+
+    results.push({
+      tag: el.tagName.toLowerCase(),
+      id: el.id || null,
+      classes: [...el.classList].join(' '),
+      text: (el.textContent || '').trim().slice(0, 80),
+      rect: {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      },
+    });
   }
 
-  return {
-    selector: selector,
-    label: label,
-    cropRect: {
-      x: Math.round(minX),
-      y: Math.round(minY),
-      width: Math.round(maxX - minX),
-      height: Math.round(maxY - minY)
-    },
-    textContent: (el.textContent || '').trim().slice(0, 80),
-    childCount: el.children.length
-  };
-}
+  return results;
+});
 
-// If called without arguments (as a script body), just return metadata for all mapped components
-function extractAllComponents(components) {
-  return components.map(function(c) {
-    var dom = c.dom || {};
-    var sel = dom.selector || dom.tag;
-    if (!sel || sel === 'NO_DOM_MATCH') return { label: c.label, type_hint: c.type_hint, error: 'no dom selector' };
-    var el = document.querySelector(sel);
-    if (!el) return { label: c.label, type_hint: c.type_hint, error: 'element not found' };
-    var r = el.getBoundingClientRect();
-    if (!r || r.width === 0) return { label: c.label, type_hint: c.type_hint, error: 'zero-size rect' };
-    return {
-      label: c.label,
-      type_hint: c.type_hint,
-      selector: sel,
-      cropRect: { x: Math.round(r.left), y: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) },
-      textContent: (el.textContent || '').trim().slice(0, 80),
-      childCount: el.children.length,
-      domStyles: dom.styles || {}
-    };
-  });
-}
-
-// Export for explicit calls
-this.extractComponentScreenshot = extractComponentScreenshot;
-this.extractAllComponents = extractAllComponents;
-
-// Auto-run if called with COMPONENTS_PLACEHOLDER
-if (typeof window !== 'undefined' && window.VCOMPONENTS && typeof window.VCOMPONENTS === 'object') {
-  return extractAllComponents(window.VCOMPONENTS);
-}
+fs.writeFileSync(outputFile, JSON.stringify(crops, null, 2));
+console.log(`Identified ${crops.length} component crop regions → ${outputFile}`);
+await browser.close();

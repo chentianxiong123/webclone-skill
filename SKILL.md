@@ -1,166 +1,200 @@
-﻿---
-name: webclone-skill
-description: >
-  Clone a live website into a pixel-perfect Vue 3 + Vite + TypeScript project.
-  Trigger when user wants to replicate, clone, or dupe a website URL.
-  Uses Python Playwright for DOM extraction, style capture, and interaction testing.
----
+# web-clone-skill
 
-# WebClone Skill
+**像素级网页克隆 Agent Skill** — 基于 `@web-clone/core` 引擎，Agent 自动编排从抓取到代码生成的完整 pipeline。
 
-You are the orchestrator for a pixel-perfect website cloning pipeline.
-You execute Phases 0-5 sequentially. Each phase reads detailed instructions
-from the references/ directory when needed.
-
-**Single page first.** Always clone ONE page + shared layout (sidebar/nav) first.
-Get it pixel-perfect and verified before adding more pages.
-
-**Python Playwright only.** All browser automation uses `python scripts/extractor.py`.
-No inline JS, no heredocs, no `node -e`, no `python -c`.
+Uses the `web-clone` monorepo (TypeScript) as the engine, wrapped with Agent-phase orchestration.
+Extends with pixel-diff verification, interaction state capture, and the 12 deep DOM extraction JS scripts.
 
 ---
 
-## Preflight Check
+## Agent Quick Start
 
-Run before ANY phase. If any fails, STOP and report.
+When user says "clone this website: https://example.com", execute **Phase 0 → Phase 5** sequentially.
+Do NOT skip any phase. Do NOT skip any GATE check.
 
-1. **Python Playwright** — verify: `python scripts/extractor.py --help` exits cleanly
-2. **Browser launch** — test: `python scripts/extractor.py about:blank -o NUL --wait 500 --headless`
-3. **Dependencies** — verify: `pip show playwright Pillow numpy`
-4. **Writable output directory** — verify the output directory is accessible
-5. **Previous run check** — if progress file exists, ask user to resume or start fresh
-6. **Scripts directory** — verify `scripts/extractor.py` and `scripts/js/extract-structure-v2.js` exist
+**Single page first.** Always clone ONE page + shared layout (sidebar/nav) before adding more pages.
+
+---
+
+## Phase 0 — Preflight
+
+Run all checks. If any fails, **STOP** and report.
+
+```bash
+# 0a. Check Node version
+node --version  # must be >= 20.0.0
+
+# 0b. Check pnpm
+pnpm --version
+
+# 0c. Install dependencies (first run only)
+pnpm install
+
+# 0d. Install Playwright browsers
+pnpm browsers:install
+
+# 0e. Verify CLI works
+pnpm dev:cli --help
+
+# 0f. Check writable output dir
+touch ./webclone-output/.probe && rm ./webclone-output/.probe
+```
 
 Print:
 ```
 PREFLIGHT PASSED:
+- Node: >=20.0.0 OK
+- pnpm: OK
+- Dependencies: installed
 - Playwright: OK
-- Dependencies: OK
-- Output directory: OK
+- Output dir: writable
 - Previous run: [none | resuming | starting fresh]
-- Scripts: OK
 ```
 
 ---
 
-## Phase 0 — Scope Definition
+## Phase 1 — Snapshot (抓取 + 资源下载)
 
-Ask the user:
-> Which page do you want to clone? I will clone this one page + the shared layout
-> (sidebar, nav, header) with full interaction fidelity. Once verified, you can
-> add more pages incrementally.
-
-Write the PAGE CHECKLIST:
-```
-## WebClone Page Checklist
-- Scope: Single page + shared layout
-- Shared layout: [ ] extracted  [ ] interactions
-- Page [name/URL]: [ ] extracted  [ ] interactions  [ ] built  [ ] verified
-```
-
-Define interaction depth (default: Depth 2 + scroll full page):
-| Depth | Meaning |
-|-------|---------|
-| 0 | Static snapshot |
-| 1 | Click each interactive element once |
-| 2 | Every tab, dropdown, form variant |
-| 3 | Multi-step interaction chains |
-
-Initialize progress file: `webclone-progress-{domain}.json`
-
----
-
-## Phase 1 — Navigation & Lazy Load
-
-Read: `references/extract.md` for full CLI reference.
+Read: `references/snapshot.md` for full CLI reference.
 
 ```bash
-# Navigate and trigger lazy content
-python scripts/extractor.py <URL> -o NUL --wait 3000 --headless
+pnpm dev:cli <URL> \
+  -o ./snapshot \
+  --adapter playwright \
+  --extract-components \
+  --max-assets 200 \
+  --concurrency 6 \
+  --timeout 15000
 ```
 
-If login required:
-1. Run `python scripts/extractor.py <URL> --visible`
-2. Prompt user to log in manually
-3. After login, extraction continues
+**SNAPSHOT GATE (mandatory):**
 
----
-
-## Phase 2 — DOM Extraction
-
-Read: `references/extract.md` for all flags and JSON schema.
+After snapshot completes, run validation:
 
 ```bash
-# Full extraction with all flags
-python scripts/extractor.py <URL> \
-  -o webclone-extraction-{domain}.json \
-  --max --capture-states --capture-screenshots --headless
+pnpm dev:cli ./snapshot --validate
 ```
 
-**EXTRACTION GATE (mandatory):**
-After extraction, read the JSON and verify:
-```
-EXTRACTION GATE:
-- Structure children: [count]
-- Text nodes: [count] (expect > 50)
-- SVG icons: [count] (each must have outerHTML)
-- Button candidates: [count]
-- Hover states: [count] (expect >= 5)
-- Validation errors: [count] (expect 0)
-```
+Check:
+- Total assets downloaded > 0
+- HTML snapshot file exists and non-empty
+- Validation errors: expect 0
 
-If ANY check fails: re-extract with higher `--wait` or `--max-depth`.
+If any check fails: re-run with `--retry-count 3` or higher `--max-assets`.
 
 ---
 
-## Phase 3 — Interaction States
+## Phase 2 — Inspect (页面分析)
 
-Already handled by `--capture-states` in Phase 2.
+Read: `references/inspect.md`.
 
-Verify the extraction JSON contains a `states` array with hover/focus/active diffs.
-If missing or < 5 entries: re-run Phase 2 with `--capture-states --states-cap 50`.
-
----
-
-## Phase 4 — Vue Build
-
-Read: `references/build-vue.md` for complete build instructions.
-
-Steps:
-1. Scaffold: `npm create vite@latest webclone-output-{domain} -- --template vue-ts`
-2. Install: `cd webclone-output-{domain} && npm install && npm install vue-router@4`
-3. Read extraction JSON → build components with exact CSS values
-4. Wire interactions with `ref`/`reactive`/`@click`/`v-model`
-5. Run value audit: compare 10 CSS values from extraction vs built
-6. Verify: `npm run build` passes with no errors
-
-**ZERO TOLERANCE:**
- - Every CSS value comes from the extraction JSON — never guess
- - SVGs are copy-paste from extraction — never generate
- - Images use real URLs from extraction — never placeholder
- - Hover states are mandatory for every interactive element
- - Missing data = red placeholder, never fabrication
-
----
-
-## Phase 5 — Pixel Verification
-
-Read: `references/verify.md` for complete verification instructions.
-
-Option A — Full-page pixel diff:
-1. Serve clone: `cd webclone-output-{domain} && npx vite --port <PORT>`
-2. Take full-page screenshots of original and clone
-3. Run `python scripts/pixel-diff.py original.png clone.png --heatmap diff.png`
-4. Test interactions manually or via Python Playwright script
-
-Option B — Component pixel diff (P0+P1 workflow):
 ```bash
-# Compare original vs clone at component level
-python scripts/pixel-diff.py crops-dir/ clone-screenshots/ --components manifest.json
-```
-Pass: >= 90% match | Warn: 70-89% | Fail: < 70%
+# Page summary
+pnpm dev:cli inspect <URL>
 
-Acceptance thresholds:
+# Structure outline (find repeating patterns = component candidates)
+pnpm dev:cli inspect <URL> --outline
+
+# Convert to markdown for quick review
+pnpm dev:cli inspect <URL> --md --budget 2000
+
+# Locate specific elements
+pnpm dev:cli inspect <URL> --locate "Search"
+```
+
+**INSPECT GATE:**
+- Confirm whether page is SPA or SSR
+- Record page title, element count, script count
+- Identify 3-5 candidate component selectors for Phase 3
+
+---
+
+## Phase 3 — Deep Extraction (深度提取)
+
+Two sub-steps:
+
+### 3a. Structured Query (结构化数据提取)
+
+Read: `references/query.md`.
+
+```bash
+# Extract all links with SPA detection
+node scripts/js/extract-links.js <URL>
+
+# Extract full CSSOM
+node scripts/js/extract-cssom.js <URL>
+
+# Extract interactive elements
+node scripts/js/extract-states-inventory.js <URL>
+
+# Extract hover/focus/active states
+node scripts/js/extract-states-capture.js <URL>
+```
+
+### 3b. Component Extraction (via web-clone engine)
+
+```bash
+pnpm dev:cli <URL> \
+  -o ./snapshot \
+  --extract-components \
+  --component-depth 5 \
+  --memory-limit 2048
+```
+
+**EXTRACTION GATE:**
+- Component count > 0
+- Interactive element candidates > 0
+- States captured >= 5 (hover/focus/active diffs)
+- CSSOM extracted completely
+- SVG elements counted with outerHTML preserved
+
+---
+
+## Phase 4 — Code Generation (框架代码生成)
+
+Read: `references/codegen.md`.
+
+```bash
+# Generate Vue 3 + TypeScript project
+pnpm dev:cli <URL> \
+  -o ./output \
+  --extract-components \
+  --codegen-framework vue \
+  --codegen-typescript \
+  --codegen-generate-drafts \
+  --codegen-extract-shared
+```
+
+Available frameworks: `vue`, `react`, `angular`, `svelte`, `jquery`
+
+**CODEGEN GATE:**
+- `npm run build` in generated project passes with 0 errors
+- All generated components have valid TypeScript types
+- CSS values match extraction JSON exactly (no fabrication)
+- SVGs are copy-paste from extraction (never generated)
+- Images use real URLs (never placeholder)
+
+---
+
+## Phase 5 — Verification (像素验证 + 交互测试)
+
+Read: `references/verify.md`.
+
+### 5a. Serve both original and clone
+
+```bash
+# Start clone server
+cd ./output/__drafts__ && npx vite --port 3001
+```
+
+### 5b. Pixel diff
+
+```python
+python scripts/python/pixel-diff.py original.png clone.png --heatmap diff.png
+```
+
+### 5c. Acceptance thresholds
+
 | Metric | Pass | Warn | Fail |
 |--------|------|------|------|
 | Grid color match % | >85% | 70-85% | <70% |
@@ -168,26 +202,32 @@ Acceptance thresholds:
 | Interactive element diff | <=2 | 3-5 | >5 |
 | Landmark position diff | <10px | 10-25px | >25px |
 | SVG count diff | <=2 | 3-5 | >5 |
+| CSS value accuracy | 100% | 90-99% | <90% |
+
+### 5d. Interaction test (Playwright)
+
+```bash
+node scripts/python/test-interactions.py --url http://localhost:3001
+```
 
 ---
 
-## Gate 4 — Final Report
+## Gate — Final Report
 
 Print:
+
 ```
 ## WebClone Complete — {domain}
 
-- Clone Location: ./webclone-output-{domain}/
-- Serve: cd ./webclone-output-{domain}/ && npm run dev
+- Snapshot: ./snapshot/
+- Generated Code: ./output/
+- Serve: cd ./output/__drafts__ && npm run dev
 
 - Verification Summary:
   - Color grid match: [N]%
   - Structure: PASS/WARN/FAIL
   - Interactions: [N]/[N] passed
-
-## WebClone Page Checklist
-- Shared layout: extracted  interactions  built
-- Page [name]: all phases complete (grid: [N]%, interactions: [N]/[N])
+  - CSS accuracy: [N]%
 ```
 
 ---
@@ -197,14 +237,13 @@ Print:
 | Error | Action |
 |-------|--------|
 | Navigation 4xx/5xx | Tell user, check URL |
-| Redirect to login | Run with --visible, prompt user |
-| Navigation timeout | Retry once with higher --wait |
+| Redirect to login | Use `--headed --adapter playwright`, prompt user |
+| Navigation timeout | Retry once with higher `--timeout` |
 | Anti-scraping challenge | Tell user to solve manually |
-| Extraction JSON empty | Re-run with --max --wait 5000 |
-| Validation errors > 0 | Read errors, fix, re-extract |
-| npm run build fails | Read error, fix TypeScript/CSS |
+| Component extraction empty | Re-run with higher `--component-depth` or `--memory-limit` |
+| Codegen build fails | Read error, fix TypeScript/CSS |
 | Port already in use | Try different port |
-| Any phase fails 3x | STOP and ask user |
+| Any phase fails 3x | **STOP** and ask user |
 
 ---
 
@@ -212,44 +251,60 @@ Print:
 
 ```
 User: "Clone this website: https://example.com"
+Agent: Phase 0 → 1 → 2 → 3 → 4 → 5, sequentially with GATE checks.
 ```
 
 **Adding pages:** After first page is verified, run again with next page URL.
-The existing clone directory and extraction cache are reused.
+The existing output directory and extraction cache are reused.
 
 ---
 
-## Scripts Reference
+## Script Reference
 
-Python tools (`scripts/`):
+### Engine CLI (TypeScript, via pnpm)
+
+| Command | What It Does |
+|---------|-------------|
+| `pnpm dev:cli <URL> -o out --adapter playwright` | Snapshot + resource download |
+| `pnpm dev:cli inspect <URL> --outline` | Page structure analysis |
+| `pnpm dev:cli query <URL> <selector>` | Structured data extraction |
+| `pnpm dev:cli <URL> --codegen-framework vue` | Generate Vue 3 code |
+| `pnpm dev:cli <URL> --serve --run` | Start local HTTP server |
+
+### Deep Extraction (JS scripts)
+
 | Script | What It Does |
 |--------|-------------|
-| `extractor.py` | Main extraction: DOM + visual + states + screenshots |
-| `component-boundary-pipeline.py` | P0+P1: screenshot → vision → DOM map → crops |
-| `pixel-diff.py` | PIL+numpy pixel comparison, red/green heatmap |
-| `placeholder-skeleton-generator.py` | Level 0 Vue SFC skeletons |
-| `linked-pages-recorder.py` | Record navigation links |
-| `cdp_snapshot.py` | CDP sub-pixel coordinates |
-| `resource_harvester.py` | Download images/fonts/css/svg |
-| `identify-boundaries.py` | Multimodal boundary detection |
-| `component_package.py` | Verification package assembly |
+| `scripts/js/extract-structure-v2.js` | Multi-coord DOM extraction |
+| `scripts/js/extract-visual-v2.js` | Semantic + visual button fusion |
+| `scripts/js/map-dom.js` | Vision → DOM mapping via containment-ratio |
+| `scripts/js/extract-links.js` | All links with SPA detection |
+| `scripts/js/extract-cssom.js` | Full CSSOM walk |
+| `scripts/js/extract-shadow.js` | Shadow DOM traversal |
+| `scripts/js/extract-states-inventory.js` | Interactive elements list |
+| `scripts/js/extract-states-capture.js` | State style capture |
+| `scripts/js/extract-lazy-load.js` | Lazy content trigger |
+| `scripts/js/extract-page-screenshot.js` | Full-page screenshot metadata |
+| `scripts/js/extract-component-screenshot.js` | Component crop coordinates |
+| `scripts/js/validate-extraction.js` | Extraction sanity check |
 
-JS scripts (`scripts/js/`):
+### Verification (Python)
+
 | Script | What It Does |
 |--------|-------------|
-| `extract-structure-v2.js` | Multi-coord DOM extraction |
-| `extract-visual-v2.js` | Semantic+visual button fusion |
-| `map-dom.js` | Vision→DOM mapping via containment-ratio |
-| `extract-links.js` | All links with SPA detection |
-| `extract-cssom.js` | Full CSSOM walk |
-| `extract-shadow.js` | Shadow DOM traversal |
-| `extract-states-inventory.js` | Interactive elements list |
-| `extract-states-capture.js` | State style capture |
-| `extract-lazy-load.js` | Lazy content trigger |
-| `extract-page-screenshot.js` | Full-page screenshot metadata |
-| `extract-component-screenshot.js` | Component crop coordinates |
-| `validate-extraction.js` | Extraction sanity check |
+| `scripts/python/pixel-diff.py` | PIL + numpy pixel comparison, red/green heatmap |
+| `scripts/python/test-interactions.py` | Playwright-based interaction testing |
 
+---
 
+## Adding New Pages
 
+After Phase 5 passes for the first page:
 
+1. User provides next page URL
+2. Run Phase 3b (component extraction) on new URL with `--incremental`
+3. Run Phase 4 for new page
+4. Run Phase 5 verification
+5. Merge new components into existing output project
+
+The existing clone directory and extraction cache are reused across pages.
