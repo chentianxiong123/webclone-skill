@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>语言选择器复刻（原版结构）</title>
+<style>
+  /* ===== 页面容器（模拟原版编辑区）===== */
+  body { margin: 0; background: #f4f6ff; font-family: Arial, Helvetica, "PingFang SC", sans-serif; }
+  .stage { width: 1316px; margin: 60px auto; }
+  .editor-box { background: #fff; border-radius: 12px; border: 1px solid #e8e9eb; padding: 16px 20px; min-height: 300px; position: relative; }
+
+  /* ===== 语言选择器（原 .pQHR0aqn 结构）===== */
+  .hc-langbar { display: flex; align-items: center; gap: 8px; padding: 0 6px; }
+  .hc-lang-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    border: none; background: transparent; cursor: pointer;
+    font-size: 13px; color: #0B0D29; padding: 4px 6px; border-radius: 6px;
+    font-family: inherit; position: relative;
+  }
+  .hc-lang-btn:hover { background: #f2f5ff; color: #6585fa; }
+  .hc-lang-swap { border: none; background: transparent; cursor: pointer; color: #0B0D29; opacity: .6; padding: 4px; border-radius: 6px; }
+  .hc-lang-swap:hover { opacity: 1; background: #f2f5ff; }
+
+  /* ===== 语言下拉面板（原 .lang-table 结构，忠实复刻）===== */
+  .hc-lang-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 620px;
+    background: #fff;
+    border: .5px solid #e8e9eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(169,173,204,.25);
+    padding: 14px;
+    z-index: 100;
+  }
+  .hc-lang-panel.is-open { display: block; }
+  .hc-lang-scroll { max-height: 380px; overflow-y: auto; overflow-x: hidden; }
+
+  /* 字母分组（原 .XnYqTsyD） */
+  .hc-lang-group { margin-bottom: 5px; }
+  /* 字母头（原 .lyyq0Nmd） */
+  .hc-lang-letter { color: #999; font-size: 12px; line-height: 1; margin: 8px 0 4px; }
+  /* 语言项（原 .XmMCA0XC：140px 宽多列） */
+  .hc-lang-item {
+    display: inline-flex; align-items: center;
+    color: #333; cursor: pointer;
+    font-size: 13.5px; line-height: 22px; margin-bottom: 6px;
+    width: 140px; padding: 2px 6px; border-radius: 5px;
+  }
+  .hc-lang-item:hover { color: #6585fa; background: #f2f5ff; }
+  .hc-lang-item.is-sel { color: #6585fa; font-weight: 500; }
+  /* 热门标记（原 .kgZvjbmi：远程 AI 图标 → 本地化文字标） */
+  .hc-lang-hot {
+    display: inline-block; margin-left: 3px; vertical-align: middle;
+    height: 13px; line-height: 13px; padding: 0 4px;
+    font-size: 9px; font-style: normal; font-weight: 500;
+    color: #fff; border-radius: 6px;
+    background: linear-gradient(90deg, #2971ff, #36bcff);
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="editor-box">
+    <!-- 语言选择器 -->
+    <div class="hc-langbar">
+      <button type="button" class="hc-lang-btn is-sel" id="hc-src" data-code="auto"><span>自动检测</span> <svg width="13" height="12" viewBox="0 0 13 12"><path d="M9.016 4.5l-3 3-3-3" stroke="currentColor" stroke-width=".9" fill="none" stroke-linecap="round"/></svg></button>
+      <button type="button" class="hc-lang-swap" id="hc-swap" title="交换语言"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M.474 4.057h9.052a.475.475 0 00.427-.678.472.472 0 00-.133-.165.475.475 0 00-.1-.095L6.337.753a.475.475 0 00-.673.64.473.473 0 00.128.133L8.06 3.112H.474A.475.475 0 000 3.584a.472.472 0 00.474.473zm9.052 1.886H.474A.475.475 0 000 6.416a.47.47 0 00.18.37.473.473 0 00.1.095l3.382 2.366a.474.474 0 00.74-.468.472.472 0 00-.195-.305L1.94 6.888h7.585A.475.475 0 0010 6.416a.472.472 0 00-.474-.473z"/></svg></button>
+      <button type="button" class="hc-lang-btn" id="hc-dst" data-code="zh"><span>中文(简体)</span> <svg width="13" height="12" viewBox="0 0 13 12"><path d="M9.016 4.5l-3 3-3-3" stroke="currentColor" stroke-width=".9" fill="none" stroke-linecap="round"/></svg></button>
+
+      <!-- 语言下拉面板（原版 lang-table 结构：A-Z 字母分组 + 热门标记） -->
+      <div class="hc-lang-panel" id="hc-panel">
+        <div class="hc-lang-scroll" id="hc-lang-groups"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 原版语言数据（/tmp/lang-groups.json，A-Z 分组 + 热门标记，199 语言）
+  var GROUPS = [["A",[["阿拉伯语", true], ["爱沙尼亚语", true], ["阿塞拜疆语", false], ["阿尔巴尼亚语", false], ["爱尔兰语", false], ["阿姆哈拉语", false], ["阿萨姆语", false], ["奥里亚语", false], ["阿尔及利亚阿拉伯语", false], ["阿肯语", false], ["阿拉贡语", false], ["阿斯图里亚斯语", false], ["艾马拉语", false], ["奥杰布瓦语", false], ["奥克语", true], ["奥罗莫语", false], ["奥塞梯语", false]]],["B",[["波兰语", true], ["保加利亚语", true], ["波斯语", false], ["白俄罗斯语", false], ["波斯尼亚语", true], ["巴斯克语", false], ["冰岛语", true], ["北索托语", false], ["比斯拉马语", false], ["巴什基尔语", false], ["巴西葡萄牙语", true], ["柏柏尔语", false], ["邦板牙语", false], ["北方萨米语", false], ["本巴语", false], ["比林语", false], ["俾路支语", false], ["博杰普尔语", false], ["布列塔尼语", false]]],["C",[["聪加语", false], ["楚瓦什语", false]]],["D",[["德语", true], ["丹麦语", true], ["迪维希语", false], ["德顿语", false], ["鞑靼语", false], ["低地德语", true]]],["E",[["俄语", true]]],["F",[["法语", true], ["芬兰语", true], ["菲律宾语", true], ["富拉尼语", false], ["法罗语", false], ["梵语", false], ["弗留利语", false]]],["G",[["高棉语", true], ["格鲁吉亚语", false], ["古吉拉特语", false], ["刚果语", false], ["瓜拉尼语", false], ["格陵兰语", false], ["盖尔语", false], ["高地索布语", false], ["古希腊语", false], ["古英语", false]]],["H",[["韩语", true], ["荷兰语", true], ["黑山语", false], ["豪萨语", false], ["海地语", false], ["哈卡钦语", false], ["胡帕语", false]]],["J",[["捷克语", true], ["加泰罗尼亚语", true], ["加利西亚语", true], ["吉尔吉斯语", false], ["加拿大法语", false]]],["K",[["克罗地亚语", true], ["卡纳达语", false], ["科萨语", false], ["科西嘉语", false], ["库尔德语", false], ["孔卡尼语", false], ["克什米尔语", false], ["卡拜尔语", false], ["卡努里语", false], ["卡舒比语", false], ["康瓦尔语", false], ["克里克语", false], ["克里米亚鞑靼语", false], ["克林贡语", false], ["克丘亚语", false]]],["L",[["罗马尼亚语", true], ["老挝语", false], ["拉丁语", false], ["立陶宛语", true], ["拉脱维亚语", true], ["卢森堡语", false], ["林加拉语", false], ["罗曼什语", false], ["拉特加莱语", false], ["林堡语", false], ["卢干达语", false], ["卢森尼亚语", false], ["卢旺达语", false], ["罗姆语", false], ["逻辑语", false]]],["M",[["缅甸语", false], ["马来语", true], ["苗语", false], ["孟加拉语", true], ["马其顿语", false], ["马拉地语", false], ["马拉雅拉姆语", false], ["马耳他语", false], ["毛利语", false], ["马拉加斯语", false], ["迈蒂利语", false], ["马绍尔语", false], ["曼克斯语", false], ["毛里求斯克里奥尔语", false]]],["N",[["挪威语", true], ["尼泊尔语", true], ["南非荷兰语", true], ["南索托语", false], ["南恩德贝莱语", false], ["那不勒斯语", false]]],["P",[["葡萄牙语", true], ["普什图语", false], ["旁遮普语", false], ["帕皮阿门托语", false]]],["Q",[["齐切瓦语", false], ["契维语", false], ["切罗基语", false]]],["R",[["日语", true], ["瑞典语", true]]],["S",[["斯洛文尼亚语", true], ["斯洛伐克语", true], ["塞尔维亚语(拉丁文)", true], ["塞尔维亚语(西里尔文)", false], ["斯瓦希里语", true], ["索马里语", false], ["萨摩亚语", false], ["世界语", true], ["苏格兰语", false], ["萨丁尼亚语", false], ["掸语", false], ["桑海语", false], ["书面挪威语", false], ["宿务语", false]]],["T",[["泰语", true], ["土耳其语", true], ["泰米尔语", false], ["土库曼语", false], ["塔吉克语", false], ["泰卢固语", false], ["他加禄语", false], ["提格利尼亚语", false], ["突尼斯阿拉伯语", false]]],["W",[["乌克兰语", true], ["乌尔都语", false], ["威尔士语", true], ["沃洛夫语", false], ["文达语", false], ["瓦隆语", false]]],["X",[["西班牙语", true], ["匈牙利语", true], ["希腊语", true], ["希伯来语", false], ["信德语", false], ["修纳语", false], ["夏威夷语", false], ["叙利亚语", false], ["巽他语", false], ["西非书面语", false], ["西弗里斯语", false], ["西里西亚语", false], ["希利盖农语", false], ["下索布语", false], ["新挪威语", false]]],["Y",[["英语", true], ["越南语", true], ["意大利语", true], ["印尼语", true], ["印地语", true], ["亚美尼亚语", true], ["约鲁巴语", false], ["伊博语", false], ["意第绪语", false], ["亚齐语", false], ["伊多语", false], ["伊努克提图特语", false], ["因特语", false], ["印古什语", false]]],["Z",[["中文(简体)", true], ["中文(繁体)", true], ["中文(粤语)", true], ["中文(文言文)", false], ["祖鲁语", false], ["爪哇语", false], ["扎扎其语", false], ["中古法语", false]]]];
+
+  // 渲染分组
+  var container = document.getElementById('hc-lang-groups');
+  GROUPS.forEach(function(g){
+    var letterName = g[0], langs = g[1];
+    var group = document.createElement('div');
+    group.className = 'hc-lang-group';
+    var letter = document.createElement('p');
+    letter.className = 'hc-lang-letter';
+    letter.textContent = letterName;
+    group.appendChild(letter);
+    langs.forEach(function(l){
+      var item = document.createElement('span');
+      item.className = 'hc-lang-item';
+      item.setAttribute('data-code', l[0]);
+      item.textContent = l[0];
+      if (l[1]) {
+        var hot = document.createElement('i');
+        hot.className = 'hc-lang-hot';
+        hot.textContent = 'AI';
+        item.appendChild(hot);
+      }
+      group.appendChild(item);
+    });
+    container.appendChild(group);
+  });
+
+  // 交互：打开/关闭面板、选中语言、交换
+  var panel = document.getElementById('hc-panel');
+  function bindBtn(id){
+    var btn = document.getElementById(id);
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      panel.classList.toggle('is-open');
+      if (panel.classList.contains('is-open')) {
+        panel.style.left = '0px';
+      }
+    });
+    return btn;
+  }
+  var srcBtn = bindBtn('hc-src');
+  var dstBtn = bindBtn('hc-dst');
+
+  // 点击语言项 → 选中（面板属于 src 还是 dst 由 lastOpened 决定）
+  var lastOpened = 'hc-dst';
+  srcBtn.addEventListener('click', function(){ lastOpened = 'hc-src'; });
+  dstBtn.addEventListener('click', function(){ lastOpened = 'hc-dst'; });
+
+  container.addEventListener('click', function(e){
+    var item = e.target.closest('.hc-lang-item');
+    if (!item) return;
+    var btn = document.getElementById(lastOpened);
+    btn.querySelector('span').textContent = item.textContent;
+    btn.setAttribute('data-code', item.getAttribute('data-code'));
+    document.querySelectorAll('.hc-lang-item').forEach(function(x){ x.classList.remove('is-sel'); });
+    item.classList.add('is-sel');
+    panel.classList.remove('is-open');
+  });
+
+  // 交换
+  document.getElementById('hc-swap').addEventListener('click', function(){
+    var sa = srcBtn.querySelector('span').textContent, da = dstBtn.querySelector('span').textContent;
+    srcBtn.querySelector('span').textContent = da;
+    dstBtn.querySelector('span').textContent = sa;
+  });
+
+  // 点外部关闭
+  document.addEventListener('click', function(){
+    panel.classList.remove('is-open');
+  });
+</script>
+</body>
+</html>
