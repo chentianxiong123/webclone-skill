@@ -1,0 +1,8 @@
+/* 右下浮动（原 .QsZTmd8Y 竖排图标：反馈/收藏/设置/开关，CDN svg 背景） */
+.hc-float-fab{align-items:center;display:inline-flex;flex-direction:column;justify-content:center}
+.hc-fab-icon{cursor:pointer;height:34px;margin-top:10px;width:34px;background-repeat:no-repeat;background-position:50%;background-size:contain;display:inline-block}
+.hc-fab-feedback{background-image:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/feedback.72237807.svg)}
+.hc-fab-collect{background-image:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/collect.db555551.svg)}
+.hc-fab-set{background-image:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/set.59ac24af.svg)}
+.hc-fab-switch{background-image:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/switch-close.7a0e4a0c.svg)}
+.hc-fab-settings{align-items:center;display:flex;position:relative;z-index:12}

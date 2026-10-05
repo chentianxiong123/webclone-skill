@@ -1,0 +1,35 @@
+/* 右侧栏（原 .qphmPPyw：白卡圆角 sticky；历史/智能参考/CoPilot 三面板） */
+.hc-right-panel{background:#fff;border-radius:10px;bottom:0;box-shadow:0 2px 8px 0 rgba(96,114,252,.05);display:flex;flex-direction:row;height:calc(100% - 20px);margin-left:20px;overflow:hidden;position:sticky;right:20px;top:0}
+.hc-right-pane-outer{border-right:1px solid rgba(209,215,230,.2);height:100%!important;overflow:hidden;z-index:2;box-sizing:border-box}
+.hc-rp-history,.hc-rp-ref{display:flex;flex-direction:column;height:100%;padding:0 0 20px}
+.hc-rp-head{border-bottom:1px solid rgba(209,215,230,.39);color:#0b0d29;font-size:14px;font-weight:500;height:50px;line-height:50px;padding-left:16px}
+.hc-rp-body{flex:1 1;padding-top:12px}
+.hc-rp-types{display:flex;margin-bottom:10px;padding-left:16px}
+.hc-rp-type{align-items:center;border:1px solid rgba(209,215,230,.3);border-radius:8px;color:rgba(11,13,41,.6);cursor:pointer;display:flex;font-size:13px;height:32px;justify-content:center;margin-right:8px;min-width:58px;padding:0 10px}
+.hc-rp-type:hover,.hc-rp-type.is-sel{color:#0b0d29;border-color:#7890ff}
+.hc-rp-tip{align-items:center;background:#f5f7ff;border-radius:6px;color:rgba(11,13,41,.4);display:flex;font-size:12px;font-weight:400;height:22px;justify-content:space-between;margin:0 15px 6px;padding:1px 10px}
+.hc-rp-clear{align-items:center;color:#447fff;cursor:pointer;display:flex;font-size:12px;justify-content:center;margin-left:12px}
+.hc-rp-login{align-items:center;display:flex;flex-direction:column;font-size:12px;padding:10px 20px 0}
+.hc-rp-login-txt{color:#999}
+.hc-rp-login-btn{color:#4d85ff;margin-top:4px;cursor:pointer}
+
+/* 智能参考 */
+.hc-rp-ref-body{height:calc(100% - 50px);overflow-y:auto;width:100%}
+.hc-rp-ref-card{background-size:15px;background:linear-gradient(84.21deg,#f5faff -10.99%,#f4f6ff 46.87%,#faf8ff 104.86%);border-radius:10px;margin:10px;padding:18px}
+.hc-rp-ref-title{color:#000;font-size:14px;font-weight:500;line-height:28px;padding-left:5px}
+.hc-rp-ref-sub{color:#bdbdbd;font-size:12px;line-height:16px;margin-top:10px}
+.hc-rp-ref-empty{margin-top:5px}
+
+/* CoPilot 助手 */
+.hc-rp-copilot{display:flex;flex-direction:column;height:100%;min-width:280px;padding-bottom:15px;position:relative}
+.hc-rp-copilot-head{align-items:center;border-bottom:1px solid rgba(209,215,230,.39);display:flex;height:50px;justify-content:space-between;padding:0 15px;position:relative}
+.hc-rp-copilot-logo{background-image:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/icon-logo.a24a5159.svg);background-position:50%;background-repeat:no-repeat;background-size:cover;height:15.5px;position:relative;top:-.7px;width:42px}
+.hc-rp-copilot-body{flex:1 1;overflow-x:hidden;overflow-y:overlay;padding:0 15px 30px;scrollbar-color:hsla(0,0%,60%,.3) transparent;scrollbar-width:none}
+.hc-rp-copilot-msg{align-items:baseline;display:flex}
+.hc-rp-copilot-bubble{align-items:baseline;display:flex;font-size:13px;line-height:1.7;color:rgba(11,13,41,.8)}
+.hc-rp-copilot-bubble img{margin-right:6px;vertical-align:middle;flex-shrink:0}
+.hc-rp-copilot-login{color:#999;font-size:12px;text-align:center;padding-top:10px}
+.hc-rp-copilot-login span{color:#4d85ff;cursor:pointer;margin-left:4px}
+
+/* 右侧条（原 .fYmMHp6G：flex column，tab 顶 fab 底，中间留白） */
+.hc-right-side{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:space-between;flex-shrink:0;padding-top:12px;padding-bottom:12px;box-sizing:border-box}

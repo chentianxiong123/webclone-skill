@@ -1,0 +1,65 @@
+<!-- 右侧栏（原 .qphmPPyw 卡片：面板区 + 竖排 tab 条 + 右下浮动，三者同卡） -->
+<div class="hc-right-panel">
+  <!-- 面板区（原 .CwnuC3IB：历史/智能参考/CoPilot 三面板） -->
+  <div style="position: relative; flex: 1 1; min-width: 0;">
+    <div class="hc-right-pane-outer">
+      <div class="hc-rp-pane" data-hc-panel="history" style="display: none;">
+        <div class="hc-rp-history">
+          <div class="hc-rp-head"><span>历史记录</span></div>
+          <div class="hc-rp-body">
+            <div class="hc-rp-types"><span class="hc-rp-type is-sel">文本</span><span class="hc-rp-type">图片</span><span class="hc-rp-type">文档</span><span class="hc-rp-type">文档翻译Pro</span></div>
+            <div class="hc-rp-tip"><span>为您保留近一个月的翻译记录</span><span class="hc-rp-clear">清空</span></div>
+          </div>
+          <div class="hc-rp-login"><span class="hc-rp-login-txt">未登录状态 为您展示最近10条历史记录</span><span class="hc-rp-login-btn">立即登录</span></div>
+        </div>
+      </div>
+      <div class="hc-rp-pane" data-hc-panel="zhineng" style="display: none;">
+        <div class="hc-rp-ref">
+          <div class="hc-rp-head"><span>智能参考</span></div>
+          <div class="hc-rp-ref-body">
+            <div class="hc-rp-ref-card"><div class="hc-rp-ref-title">权威术语库参考</div><div class="hc-rp-ref-sub">暂未识别到术语</div><div class="hc-rp-ref-empty"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="hc-rp-pane" data-hc-panel="AIAide" style="display: none;">
+        <div class="hc-rp-copilot">
+          <div class="hc-rp-copilot-head"><span class="hc-rp-copilot-logo"></span></div>
+          <div class="hc-rp-copilot-body">
+            <div class="hc-rp-copilot-msg">
+              <div class="hc-rp-copilot-bubble">
+                <img src="https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/icon-guide.8544858e.svg" width="19" height="19" alt="">Hi，我是您的超级助手！术语查证、译文解析、AI润色、翻译审校、内容总结、自由问答全覆盖，快来试试吧～
+              </div>
+            </div>
+          </div>
+          <div class="hc-rp-copilot-login">请登录后使用<span>立即登录</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 右侧条（原 .fYmMHp6G：竖排 tab + 右下浮动） -->
+  <div class="hc-right-side">
+    <div class="hc-right-tabs">
+      <div role="tablist" class="hc-right-tabs-nav">
+        <div class="hc-right-tabs-list">
+          <div data-node-key="AIAide" class="hc-right-tab hc-right-tab-active">
+            <div role="tab" aria-selected="true" class="hc-right-tab-btn" tabindex="0" id="hc-right-tab-aiaide" aria-controls="hc-right-panel-aiaide">
+              <span class="hc-right-tab-ic hc-right-tab-ic-ai"></span>
+            </div>
+          </div>
+          <div data-node-key="history" class="hc-right-tab">
+            <div role="tab" aria-selected="false" class="hc-right-tab-btn" tabindex="0" id="hc-right-tab-history" aria-controls="hc-right-panel-history">
+              <span class="hc-right-tab-ic hc-right-tab-ic-history"></span>
+            </div>
+          </div>
+          <div class="hc-right-tabs-ink"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hc-float-fab">
+      <span class="hc-fab-icon hc-fab-feedback" title="意见反馈"></span>
+      <span class="hc-fab-icon hc-fab-collect" title="收藏"></span>
+      <div class="hc-fab-settings"><span class="hc-fab-icon hc-fab-set" title="设置"></span></div>
+      <span class="hc-fab-icon hc-fab-switch" title="隐藏"></span>
+    </div>
+  </div>
+</div>

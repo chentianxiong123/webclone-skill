@@ -1,0 +1,28 @@
+/* 侧栏广告（原 .Hu5qsRSB/.Wl_WK9Q1/.uJmljXQ8：白卡圆角 + CDN 背景图） */
+.hc-side-ads{height:144px;margin-top:18px;align-items:center;display:flex;justify-content:space-between}
+.hc-ads-row{background:#fff;border-radius:10px;box-shadow:0 2px 8px 0 rgba(96,114,252,.05);flex:1 1;height:100%;margin:0;padding:12px;align-items:center;display:flex;justify-content:space-between;list-style:none}
+.hc-ads-row + .hc-ads-row{margin-left:12px}
+.hc-ads-row li{border-radius:8px;cursor:pointer;height:120px;position:relative;text-align:center;width:100%;background:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/bg.ea77cf4b.png);background-size:cover;list-style:none}
+.hc-ads-row li+li{margin-left:12px}
+.hc-ads-row li:hover .hc-ads-txt strong:after{display:inline-block}
+.hc-ads-row-dl li{align-items:flex-end;display:inline-flex;background:linear-gradient(180deg,#e6f2ff,#f5f7ff)}
+.hc-ads-row-dl li:after{background:linear-gradient(174.86deg,rgba(245,247,255,0) 4.13%,#f5f7ff 68.59%);bottom:0;content:"";display:inline-block;height:32px;position:absolute;right:0;width:100%}
+
+/* 图标区（原 .KwiYcsEJ/.bMgvoNX8/.e0Li2KTn/.vkwOAF8f：CDN 2x 图） */
+.hc-ads-pic{background-image:-webkit-image-set(url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/lf_01.89a68ceb.png) 2x);background-position:100% 100%;background-repeat:no-repeat;background-size:contain;height:100%}
+.hc-ads-pic-edit{background-image:-webkit-image-set(url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/lf_02.1dc6d863.png) 2x)}
+.hc-ads-pic-pc{background-image:-webkit-image-set(url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/rt_07.b000e2c9.png) 2x);background-position:right 3px bottom 13px;background-size:112px 79.7px;width:100%}
+.hc-ads-pic-app{background-image:-webkit-image-set(url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/rt_06.1d6e4947.png) 2x);background-position:right 7px bottom 0;background-size:98px 97px;max-height:100px;width:100%}
+
+/* 文本区（原 .wGRatXfj） */
+.hc-ads-txt{align-items:flex-start;display:flex;flex-direction:column;font-size:13px;left:15px;line-height:18px;position:absolute;top:15px;white-space:nowrap}
+.hc-ads-txt strong{color:rgba(11,13,41,.8);font-weight:400}
+.hc-ads-txt strong:after{background:url(https://fanyi-cdn.cdn.bcebos.com/static/cat/asset/arrow.1123ab09.svg) no-repeat 50%;background-size:contain;content:"";display:none;height:8px;margin-left:2px;vertical-align:0;width:5px}
+.hc-ads-txt span{color:#afb2cf;margin-top:4px;text-align:left}
+.hc-ads-row-dl .hc-ads-txt strong{margin-bottom:5px}
+.hc-ads-row-dl .hc-ads-txt span{align-items:center;display:flex;font-size:12px;margin:0}
+.hc-ads-row-dl .hc-ads-txt span:before{background:#afb2cf;border-radius:50%;content:"";display:inline-block;height:3px;margin-right:4px;width:3px}
+
+/* 下载按钮（原 .yIBiqjwT 渐变胶囊） */
+.hc-ads-dl-btn{align-items:center;background:linear-gradient(100.67deg,rgba(125,165,255,.95) .67%,#6978ff 64.63%);border:.81px solid rgba(216,228,255,.4);border-radius:40px;bottom:8px;box-shadow:0 8.05px 9.39px 0 rgba(180,197,242,.66);color:#fff;display:flex;font-size:12px;height:25px;justify-content:center;position:absolute;right:8px;width:44px;z-index:2}
+.hc-ads-dl-btn:hover{background:linear-gradient(100.67deg,rgba(125,165,255,.665) .67%,rgba(105,120,255,.7) 64.63%)}

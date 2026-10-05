@@ -1,0 +1,7 @@
+/* Tab 导航（原 .ant-tabs-nav 样式映射，active 渐变下划线保留） */
+.hc-tabs{position:relative;display:flex;align-items:center;padding-left:20px;border-bottom:.5px solid rgba(56,59,89,.08);margin-bottom:0}
+.hc-tab{position:relative;display:inline-flex;align-items:center;gap:4px;padding:14px 0;margin-right:32px;border:none;background:none;cursor:pointer;font-size:14px;color:#5b6073;font-family:inherit;transition:color .2s}
+.hc-tab:hover{color:#6585fa}
+.hc-tab.is-active{color:#0b0d29;font-weight:500;text-shadow:none}
+.hc-tab-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:4px;padding:0 5px;height:16px;font-size:10px;font-style:normal;border-radius:8px;border:.5px solid #3db0ff;background:linear-gradient(55deg,rgba(74,228,255,.12) -14.12%,rgba(66,130,255,.12) 47.61%,rgba(215,104,255,.12) 105.84%);color:#0062ff}
+.hc-tab-ink{position:absolute;bottom:0;left:20px;height:2px;width:56px;border-radius:2px;background:linear-gradient(90deg,#2971ff .01%,#36bcff 99.99%);transition:left .3s ease,width .3s ease}

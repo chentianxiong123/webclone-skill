@@ -1,0 +1,33 @@
+/* 功能按钮行（原 .JjBtRHIL：56px 行 + 胶囊按钮 + AI翻译渐变按钮） */
+.hc-actionbar { height: 56px; justify-content: space-between; padding: 0 15px; position: relative; width: 100%; align-items: center; display: flex; box-sizing: border-box; }
+.hc-actionbar-left { align-items: center; display: flex; flex: 1 1; }
+
+/* 胶囊按钮（原 .uF6adESN/.Cki2LZRI/.EFflylzd 同款） */
+.hc-pill {
+  align-items: center; border: 1px solid #ebedf2; border-radius: 28px;
+  color: rgba(11,13,41,.8); cursor: pointer; display: inline-flex;
+  font-size: 12px; height: 28px; justify-content: center;
+  margin-right: 8px; padding: 0 6px; transition: none !important;
+  user-select: none;
+}
+.hc-pill:hover { background: #f5f7ff; border: 1px solid #d5def8; }
+.hc-pill + .hc-pill { margin-left: 1px; }
+.hc-pill svg { margin-left: 4px; margin-top: -1px; transform: rotate(90deg) scale(.8); }
+
+/* 深度思考激活态（原 .EFflylzd.Tiyz3l0s：渐变描边+渐变文字） */
+.hc-pill-toggleable.is-on { background: #f5f7ff !important; border: 1px solid #d5def8 !important; }
+.hc-pill-toggleable.is-on span {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(54.74deg, #36bcff -7.93%, #065aff 31.05%, #b368ff 75.76%, #ffb168 106.71%);
+  background-clip: text; -webkit-background-clip: text;
+}
+
+/* AI翻译按钮（原 button.Dmn89frm 渐变） */
+.hc-btn-ai {
+  background: linear-gradient(54.14deg, #71ffff -7.65%, #5fbcff 17.38%, #508bff 45.48%, #e186ff 104.74%) !important;
+  border: 0; border-radius: 30px; box-shadow: none; color: #fff !important;
+  cursor: pointer; font-size: 13px; height: 28px;
+  justify-content: center; align-items: center; display: flex;
+  padding: 0 16px; transition: none !important; font-family: inherit;
+}
+.hc-btn-ai:hover { filter: brightness(1.05); }
