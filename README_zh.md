@@ -4,6 +4,8 @@ Pi Agent Skill — AI 驱动的网页克隆。
 
 **先快照，本地提取，AI 生成代码。** 通过 web-clone 引擎将目标页面下载为带 API 代理的静态快照，所有提取和生成都在本地副本上完成，完全绕过登录墙和反爬机制。
 
+> 📚 **示例项目见 [webclone-examples](https://github.com/chentianxiong123/webclone-examples)** —— 百度翻译、B 站首页等真实复刻案例。
+
 ---
 
 ## 快速开始

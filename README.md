@@ -4,6 +4,8 @@ Pi Agent Skill for AI-driven website cloning.
 
 **Snapshot first, extract locally, AI generates code.** Bypasses login walls and anti-scraping by downloading the page as a static snapshot with API proxy, then running all extraction and generation against the local copy.
 
+> 📚 **See [webclone-examples](https://github.com/chentianxiong123/webclone-examples)** for real-world clone projects — Baidu Translate, Bilibili homepage, and more.
+
 ---
 
 ## Quick Start
